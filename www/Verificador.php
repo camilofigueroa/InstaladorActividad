@@ -40,4 +40,13 @@
             return $salida;
         }
 
+        /**
+        * Borra un archivo del sistema.
+        * @param        texto           nombre del archivo que se va a borrar.
+        */
+        function borrar_archivo( $nombre_archivo )
+        {
+            unlink( $nombre_archivo );
+        }
+
     }

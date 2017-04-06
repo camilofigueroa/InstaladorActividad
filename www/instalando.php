@@ -4,10 +4,17 @@
 	* Autor: Camilo Figueroa
 	* Este programa creará una base de datos con todos sus componentes. La prueba sería usar este script y después mirar 
 	* que efectivamente exportándola y creando el gráfico del modelo entidad relación, todos sus componentes estén ahí.
+	*
+	* En este programa se usan tanto la programación estructurada, como las funciones y la POO.
 	*/
 
+	include( "Verificador.php" ); //Se incluye la clase verificador, la idea es no hacer este código más grande.
+	$objeto_verificador = new Verificador(); //Se crea la instancia de la clase verificador.
+
+	define( "NUMERO_DE_TABLAS", 2 ); //Se define el número de tablas que se va a crear. 
+
 	$contador_variables_llegada = 0; 
-	$cadena_informe_instalacion = 0; 
+	$cadena_informe_instalacion = ""; 
 	$interrupcion_proceso = 0;
 	$imprimir_mensajes_prueba = 0;  //Usar valores 0 o 1, solo para el programador.
 	$tmp_nombre_objeto_o_tabla = "";
@@ -27,9 +34,28 @@
 		if( $imprimir_mensajes_prueba == 1 ) echo "<br>Entrando al bloque de instalaci&oacute;n.";
 
 		//Se realiza una sola conexión para la ejecución de todas las consultas SQL.-------------------------------
-		$conexion = mysqli_connect( $_GET[ 'servidor' ], $_GET[ 'usuario' ], $_GET[ 'contrasena' ], $_GET[ 'bd' ] );
+		//$conexion = @mysqli_connect( $_GET[ 'servidor' ], $_GET[ 'usuario' ], $_GET[ 'contrasena' ], $_GET[ 'bd' ] ); //Linea anterior, salía error de conexión.
+		$conexion = @mysqli_connect( $_GET[ 'servidor' ], $_GET[ 'usuario' ], $_GET[ 'contrasena' ], $_GET[ 'bd' ] ); //Ojo, con el arroba no sale el mensaje de error.
 
-		if( $interrupcion_proceso == 0 ) //Si esta variable cambia, la instalación será interrumpida.
+		if( !$conexion ) //Verificamos que la conexion esté establecida preguntando si hay error o conexión no existe.
+		{
+			$interrupcion_proceso = 1; //Si pasa a este bloque, la conexión no se ha establecido, quiere decir que activaremos la variable de interrupción.
+			$cadena_informe_instalacion .= "<br>Error: no se ha podido establecer una conexión con la base de datos. ";
+
+		}else{
+
+				//echo "1 fds<br>".$objeto_verificador->mostrar_tablas( $conexion, 2 );
+
+				if( $objeto_verificador->mostrar_tablas( $conexion, 2 ) != 0 ) //Aquí se verifica que no hayan tablas existentes.
+				{
+					//echo "2 fds<br>";
+
+					echo "Ya hay tablas creadas, por favor cree una base de datos nueva.<br>"; 
+					$interrupcion_proceso = 1;
+				}
+			}
+
+		if( $interrupcion_proceso == 0 ) //Si esta variable cambia, la instalación será interrumpida para cada bloque sql.
 		{
 			$tmp_nombre_objeto_o_tabla = "geo_paises";
 
@@ -55,7 +81,7 @@
 				}
 		}
 
-		if( $interrupcion_proceso == 0 ) //Si esta variable cambia, la instalación será interrumpida.
+		if( $interrupcion_proceso == 0 ) //Si esta variable cambia, la instalación será interrumpida para cada bloque sql.
 		{
 			$tmp_nombre_objeto_o_tabla = "geo_departamentos";
 
@@ -83,7 +109,7 @@
 				}
 		}
 
-		if( $interrupcion_proceso == 0 ) //Si esta variable cambia, la instalación será interrumpida.
+		if( $interrupcion_proceso == 0 ) //Si esta variable cambia, la instalación será interrumpida para cada bloque sql.
 		{
 			$tmp_nombre_objeto_o_tabla = "fk_dpto_pais";
 
@@ -106,13 +132,24 @@
 				}
 		}
 
-		echo $cadena_informe_instalacion; //Se imprime un sencillo informa de la instalación.
+		
+		if( $interrupcion_proceso == 0 )
+		{
+			//ojo aquí se usa la clase verificadora para imprimir lo que se ha creado.
+			echo $objeto_verificador->mostrar_tablas( $conexion ); //Hay que recordar que la conexión ya se creó arriba.
+
+			echo "Se han creado ".$objeto_verificador->mostrar_tablas( $conexion, 2 )." tablas de ".NUMERO_DE_TABLAS." que se deb&iacute;an crear.  ";
+			
+			echo "<br><br>";
+			echo "<a href='borrando_archivos.php' target='_self'>Proceder a borrar archivos de intalaci&oacute;n</a>";
+			echo "<br><br>";
+		}
+		
+		echo $cadena_informe_instalacion; //Se imprime un sencillo informe de la instalación.
 
 	}else{ 									// Super if - else 
 			echo "<br>Por favor ingresa el valor de los campos solicitados: Servidor, usuario, base de datos.<br>";
 		} 									// Super if - final
-
-
 
 	/*******************************************f u n c i o n e s*********************************************************************/
 
